@@ -1,0 +1,117 @@
+<?php include 'header.html'; ?>
+            <section id="content" class="page-content text-center py-3">
+                    <hr><h2>Interface de gestion de véhicule</h2><hr>
+                    <div class="row py-3">
+                        <div class="col py-2">
+                            <div class="card ">
+                                <div class="card-header">                    
+                                    <h3>Formulaire de réservation</h>
+                                </div>
+                                <div class="card-body">                    
+                                    <form id="eventForm">
+                                            <label for="eventStart">Début de réservation du véhicule :</label><br><input type="datetime-local" id="eventStart" name="eventStart" class="form-control" required>
+                                            <label for="eventEnd">Fin de réservation du véhicule :</label><br><input type="datetime-local" id="eventEnd" name="eventEnd" class="form-control" required>
+                                            <label for="eventidUserSelect">Utilisateur concerné :</label><br><select id="eventidUserSelect" name="eventidUserSelect" class="form-control" required>
+                                                <option value="">Sélectionnez un utilisateur</option>
+                                                <?php foreach ($users as $user) : ?>
+                                                    <option value="<?php echo $user['id']; ?>">
+                                                    <?php echo $user['nom'] . ' ' . $user['prenom'] . ' (' . $user['pseudo'] . ')'; ?>
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                            <label for="eventidVehiculeSelect">Véhicule souhaité :</label><br><select id="eventidVehiculeSelect" name="eventidVehiculeSelect" class="form-control" required>
+                                                <option value="">Sélectionnez un véhicule</option>
+                                                <?php foreach ($cars as $car) : ?>
+                                                    <option value="<?php echo $car['id']; ?>"><?php echo $car['marque'] . ' ' . $car['modele'] . ' (' . $car['annee'] . ')'; ?></option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        <br><input type="submit" value="Créer la réservation" class="btn btn-outline-secondary">
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col py-2">
+                            <div class="card">
+                                <div class="card-header"> 
+                                    <h3>Planning de réservation</h3>
+                                </div>
+                                <div class="card-body">
+                                    <div id="calendar-all-events"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row py-3">
+                        <div class="col">
+                            <div class="card">
+                                <div class="card-header">
+                                <h3>Liste des véhicules de la compagnie</h3>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <?php foreach ($cars as $car): ?>
+                                        <div class="col-md-3 mb-3">
+                                            <div class="card">
+                                                <img src="<?php echo $car['image']; ?>" class="card-img-top" alt="Car Image">
+                                                <div class="card-body">
+                                                    <h5 class="card-title"><?php echo $car['marque'] . ' ' . $car['modele']; ?></h5>
+                                                    <p class="card-text">Année : <?php echo $car['annee']; ?></p>
+                                                    <p class="card-text">Plaque : <?php echo $car['plaque']; ?></p>
+                                                    <p class="card-text">
+                                                        <?php if ($car['disponible']) { echo '<span style="color: green;">Disponible</span>'; } else { echo '<span style="color: red;">Indisponible</span>'; } ?>
+                                                    </p>
+                                                    <div class="btn-group pb-3" role="group" aria-label="Actions">
+                                                        <a href="https://www.openstreetmap.org/?mlat=<?php echo $car['latitude'] . '&mlon=' . $car['longitude']; ?>#map=12/<?php echo $car['latitude'] . '/' . $car['longitude']; ?>" class="btn btn-outline-primary" target="_blank">Localiser</a>
+                                                        <a href="http://<?php echo $car['ip']; ?>:8000" class="btn btn-outline-primary" target="_blank">Administrer</a>
+                                                    </div>
+                                                    <form method="POST" action="/gestion.php" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce véhicule ?');">
+                                                        <input type="hidden" name="vehicule_id" value="<?php echo $_SESSION['id_session']; ?>">
+                                                        <button type="submit" name="delete_vehicule" class="btn btn-outline-danger">Supprimer</button>
+                                                    </form>                                    
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row justify-content-center py-3">
+                        <div class="col-lg-8">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3>Formulaire pour les nouveaux véhicules</h3>
+                                </div>
+                                <div class="card-body">
+                                    <form id="auto-forms" method="post" enctype="multipart/form-data">
+                                        <div class="mb-3">
+                                            <label class="form-label" for="plaque">Immatriculation :</label>
+                                            <input type="text" name="plaque" id="plaque" class="form-control" placeholder="AA123AA" minlength="7" maxlength="9" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label" for="marque">Marque :</label>
+                                            <input type="text" name="marque" id="marque" class="form-control" placeholder="Marque" maxlength="50" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label" for="modele">Modèle :</label>
+                                            <input type="text" name="modele" id="modele" class="form-control" placeholder="Modèle" maxlength="50" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label" for="annee">Année :</label>
+                                            <input type="text" name="annee" id="annee" class="form-control" placeholder="2000" pattern="[0-9]+" title="Veuillez saisir uniquement des chiffres" minlength="4" maxlength="4" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label" for="image">Image du véhicule :</label>
+                                            <input type="file" name="image" id="image" class="form-control" accept=".png, .jpg, .jpeg, gif">
+                                        </div>
+                                        <div class="mb-3">
+                                            <input type="submit" value="Ajouter le véhicule" class="btn btn-primary">
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </section>
+<?php include 'footer.html'; ?>

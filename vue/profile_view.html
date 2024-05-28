@@ -1,0 +1,65 @@
+<?php include 'header.html'; ?>
+			<section id="content" class="page-content py-3">
+				<div class="row justify-content-center py-3">
+					<div class="col-lg-8">
+						<div class="card">
+							<div class="card-header">
+								<h3 class="text-center">Profil</h3>
+							</div>
+							<div class="card-body">
+								<div class="profile-info">
+									<div class="mb-3 row">
+										<label for="pseudo" class="col-sm-2 col-form-label"><strong>Pseudo :</strong></label>
+										<div class="col-sm-10">
+											<span id="pseudo"><?php echo stripslashes(htmlspecialchars($data['pseudo'])); ?></span>
+										</div>
+									</div><hr>
+									<div class="mb-3 row">
+										<label for="nom" class="col-sm-2 col-form-label"><strong>Nom :</strong></label>
+										<div class="col-sm-10">
+											<span id="nom"><?php echo stripslashes(htmlspecialchars($data['nom'])); ?></span>
+										</div>
+									</div><hr>
+									<div class="mb-3 row">
+										<label for="prenom" class="col-sm-2 col-form-label"><strong>Prénom :</strong></label>
+										<div class="col-sm-10">
+											<span id="prenom"><?php echo stripslashes(htmlspecialchars($data['prenom'])); ?></span>
+										</div>
+									</div><hr>
+									<div class="mb-3 row">
+										<label for="phone" class="col-sm-2 col-form-label"><strong>Téléphone :</strong></label>
+										<div class="col-sm-10">
+											<span id="phone"><?php echo stripslashes(htmlspecialchars($data['phone'])); ?></span>
+										</div>
+									</div><hr>
+									<div class="mb-3 row">
+										<label for="adresse" class="col-sm-2 col-form-label"><strong>Adresse :</strong></label>
+										<div class="col-sm-10">
+											<span id="adresse"><?php echo stripslashes(htmlspecialchars($data['adresse'])); ?></span>
+										</div>
+									</div><hr>
+									<div class="mb-3 row">
+										<label for="email" class="col-sm-2 col-form-label"><strong>Email :</strong></label>
+										<div class="col-sm-10">
+											<a class="link" href="mailto:<?php echo stripslashes($data['email']); ?>"><?php echo stripslashes(htmlspecialchars($data['email'])); ?></a>
+										</div>
+									</div><hr>
+									<div class="mb-3 row">
+										<label for="dateenregistre" class="col-sm-2 col-form-label"><strong>Inscrit depuis :</strong></label>
+										<div class="col-sm-10">
+											<span id="dateenregistre"><?php echo date('d F Y', strtotime(str_replace('/','-',$data['dateenregistre']))); ?></span>
+										</div>
+									</div><hr>
+									<div class="mb-3 row">
+										<label for="avatar" class="col-sm-2 col-form-label"><strong>Avatar :</strong></label>
+										<div class="col-sm-10">
+											<img src="<?php echo $data['avatar']; ?>" width="150px" alt="Aucun avatar" />
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</section>
+<?php include 'footer.html'; ?>

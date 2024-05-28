@@ -1,0 +1,103 @@
+<?php include 'header.html'; ?>
+            <section id="content" class="page-content py-3">
+                    <div class="row justify-content-center py-3">
+                        <div class="col-lg-9">
+                            <form method="post" action="profil.php?action=modifier" enctype="multipart/form-data">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h3 class="text-center">Edition du profil de <?php echo stripslashes(htmlspecialchars($data['pseudo'])); ?></h>
+                                    </div>
+                                    <div class="card-body">
+                                        <fieldset>
+                                            <legend>Mot de passe</legend>
+                                            <div class="mb-3 row">
+                                                <label for="password" class="col-sm-4 col-form-label">*Nouveau mot de passe</label>
+                                                <div class="col-sm-8">
+                                                    <input type="password" name="password" id="password" class="form-control" autocomplete="current-password"/>
+                                                </div>
+                                            </div>
+                                            <div class="mb-3 row">
+                                                <label for="confirm" class="col-sm-4 col-form-label">*Confirmation du mot de passe</label>
+                                                <div class="col-sm-8">
+                                                    <input type="password" name="confirm" id="confirm" class="form-control" />
+                                                </div>
+                                            </div>
+                                        </fieldset>
+                                        <fieldset>
+                                            <legend>Localisation et contacts</legend>
+                                            <div class="mb-3 row">
+                                                <label for="localisation" class="col-sm-4 col-form-label">Adresse</label>
+                                                <div class="col-sm-8">
+                                                    <input type="text" name="localisation" id="localisation" class="form-control" placeholder="Adresse" autocomplete="street-address" minlength="6" maxlength="50" required value="<?php echo stripslashes($data['adresse']); ?>" />
+                                                </div>
+                                            </div>
+                                            <div class="mb-3 row">
+                                                <label for="email" class="col-sm-4 col-form-label">Adresse email</label>
+                                                <div class="col-sm-8">
+                                                    <input type="email" name="email" id="email" class="form-control" placeholder="email@mail.fr" autocomplete="email" minlength="3" maxlength="30" required value="<?php echo stripslashes($data['email']); ?>" />
+                                                </div>
+                                            </div>
+                                            <div class="mb-3 row">
+                                                <label for="phone" class="col-sm-4 col-form-label">Téléphone</label>
+                                                <div class="col-sm-8">
+                                                    <input type="tel" name="phone" id="phone" class="form-control" placeholder="Numéro de téléphone" autocomplete="tel" minlength="10" maxlength="15" required value="<?php echo stripslashes($data['phone']); ?>" />
+                                                </div>
+                                            </div>
+                                        </fieldset>
+                                        <fieldset>
+                                            <legend>Informations personnelles</legend>
+                                            <div class="mb-3 row">
+                                                <label for="pseudo" class="col-sm-4 col-form-label">Pseudo</label>
+                                                <div class="col-sm-8">
+                                                    <p class="form-control-static"><?php echo stripslashes($data['pseudo']); ?></p>
+                                                </div>
+                                            </div>
+                                            <div class="mb-3 row">
+                                                <label for="prenom" class="col-sm-4 col-form-label">Prénom</label>
+                                                <div class="col-sm-8">
+                                                    <p class="form-control-static"><?php echo stripslashes($data['prenom']); ?></p>
+                                                </div>
+                                            </div>
+                                            <div class="mb-3 row">
+                                                <label for="nom" class="col-sm-4 col-form-label">Nom</label>
+                                                <div class="col-sm-8">
+                                                    <p class="form-control-static"><?php echo stripslashes($data['nom']); ?></p>
+                                                </div>
+                                            </div>
+                                        </fieldset>
+                                        <fieldset>
+                                            <div class="mb-3 row">
+                                                <label for="avatar" class="col-sm-4 col-form-label">Image de profil</label>
+                                                <div class="col-sm-8">
+                                                    <img src=".<?php echo $data['avatar']; ?>" width="150px" alt="Aucun avatar" ?t=<?php echo time(); ?> />
+                                                </div>
+                                            </div>
+                                            <div class="mb-3 row">
+                                                <label class="col-sm-4 col-form-label" for="avatar">Nouvelle image :</label>
+                                                <div class="col-sm-8">
+                                                    <input type="file" name="avatar" id="avatar" class="form-control" autocomplete="photo" accept="image/*;capture=camera" />
+                                                    <input type="checkbox" name="delete" value="Delete" /> Supprimer mon avatar
+                                                </div>
+                                            </div>
+                                        </fieldset>
+                                        <div class="mb-3">
+                                            <input type="submit" value="Modifier mon profil" class="btn btn-primary" /> 
+                                            <input type="hidden" id="sent" name="sent" value="1" />
+                                        </div>
+                                        <div class="alert alert-info" role="alert">
+                                            Les champs avec une * sont obligatoires
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="row text-center">
+                        <div class="col">
+                            <form method="POST" action="profil.php" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer votre compte ?');">
+                                <input type="submit" name="delete_client" class="btn btn-outline-danger" value="Supprimer mon compte">
+                            </form>  
+                        </div>
+                    </div>
+            </section>
+<?php include 'footer.html'; ?>

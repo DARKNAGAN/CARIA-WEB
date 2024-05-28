@@ -1,0 +1,17 @@
+.bg1 {
+	background:#E8F2F9;
+    /*background-image: url(../config/images/bg.jpg);
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: cover;
+    background-attachment: scroll;*/
+}
+.disponible {
+    color: green;
+}
+.indisponible {
+    color: red;
+}
+#map{ /* la carte DOIT avoir une hauteur sinon elle n'apparaît pas */
+    height:400px;
+}

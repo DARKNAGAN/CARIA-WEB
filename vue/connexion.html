@@ -1,0 +1,76 @@
+<?php include 'header.html'; ?>
+<section id="content" class="page-content text-center py-3">
+    <div class="row justify-content-center py-3">
+        <div class="col-lg-5">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Connexion</h3>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="index.php">
+                        <fieldset>
+                            <div class="mb-3">
+                                <label class="form-label" for="pseudo_connect">Pseudo :</label>
+                                <input name="pseudo_connect" type="text" class="form-control form-control-sm" id="pseudo_connect" autocomplete="username" maxlength="25" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label" for="password_connect">Mot de passe :</label>
+                                <input type="password" name="password_connect" class="form-control" id="password_connect" autocomplete="current-password" maxlength="32" required>
+                            </div>
+                        </fieldset>
+                        <div class="mb-3">
+                            <input type="submit" value="Connexion" class="btn btn-primary">
+                        </div>
+                    </form>
+                    <a href="inscription.php">Pas encore inscrit ?</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row py-3">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h3>La plateforme en chiffre</h3>
+                </div>
+                <div class="card-body">
+                    <p>La plateforme compte <strong><?php echo $TotalDesMembres; ?></strong> membres.</p>
+                    <p><strong><?php echo $TotalDesVehicules; ?></strong> véhicules disponibles à la réservation sur la plateforme.</p>
+                    <p><a href="./profil.php?m=<?php echo $data['id']; ?>&amp;action=consulter"><?php echo $derniermembre; ?></a> est le dernier membre inscrit.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row justify-content-center py-3">
+        <div class="col-lg-9">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Contact</h3>
+                    <div class="alert alert-info" role="alert">Formulaire actuellement désactivé</div>
+                </div>
+                <div class="card-body">
+                    <form>
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Nom et Prénom *</label>
+                            <input type="text" class="form-control" id="name" name="name" readonly required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Adresse e-mail *</label>
+                            <input type="email" class="form-control" id="email" name="email" readonly required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="subject" class="form-label">Sujet</label>
+                            <input type="text" class="form-control" id="subject" name="subject" readonly required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="message" class="form-label">Message</label>
+                            <textarea class="form-control" id="message" name="message" rows="4" readonly required></textarea>
+                        </div>
+                        <button class="btn btn-primary">Envoyer</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<?php include 'footer.html'; ?>
