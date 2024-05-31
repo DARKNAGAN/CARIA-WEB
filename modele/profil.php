@@ -241,7 +241,7 @@ function post_RemoveClient($id) {
     $req->execute();
     $userData = $req->fetch(PDO::FETCH_ASSOC);
     if ($userData) {
-        $imagePath = $userData['avatar'];
+        $imagePath = "." . $userData['avatar'];
         if (file_exists($imagePath)) {
             unlink($imagePath);
         }

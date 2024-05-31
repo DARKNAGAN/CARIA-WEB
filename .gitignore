@@ -1,1 +1,4 @@
 Thumbs.db
+.DS_Store
+/config/connexion_sql.php
+/module
