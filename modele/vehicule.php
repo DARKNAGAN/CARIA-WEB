@@ -1,5 +1,5 @@
 <?php
-function get_checkPlaque(){ // Verification pour ajout d'une voiture
+function get_checkPlaque(){ // Verification pour ajout d'une vehicule
 	global $bdd;
 	$plaque=$_POST['plaque'];
 	$req = $bdd->prepare('SELECT COUNT(*) AS nbr FROM Vehicules WHERE plaque =:plaque');
@@ -65,11 +65,8 @@ function post_RemoveVehicule($id) {
     $data = $req->fetch(PDO::FETCH_ASSOC);
     if ($data) {
         // Supprimer l'image
-        $imagePath = $data['image'];
+        $imagePath = "." . $data['image'];
         unlink($imagePath);
-        // Supprimer le dossier
-        $folderPath = dirname($imagePath);
-        rmdir($folderPath);
     }
     // Supprimer le véhicule de la base de données
     $req = $bdd->prepare('DELETE FROM Vehicules WHERE id=:id');
@@ -94,9 +91,9 @@ function post_RegistreCar(){ // Ajout vehicule en DB
         $nomimage = edit_image($image, $plaque);
     } else {
         // Utiliser une image par défaut si aucune image n'est fournie
-        $defaultImagePath = "./images/vehicules/img_voiture.png";
-        $dirPath = "./images/vehicules/" . $plaque . "/img_voiture.png";
-        $nomimage = "/images/vehicules/" . $plaque . "/img_voiture.png";
+        $defaultImagePath = "./images/vehicules/img_vehicule.png";
+        $dirPath = "./images/vehicules/" . $plaque . "/img_vehicule.png";
+        $nomimage = "/images/vehicules/" . $plaque . "/img_vehicule.png";
         copy($defaultImagePath, $dirPath);
     }
 	$req = $bdd->prepare('INSERT INTO Vehicules (plaque, marque, modele, annee, image) VALUES (:plaque, :marque, :modele, :annee, :nomimage)');
@@ -111,6 +108,7 @@ function edit_image($image, $plaque) {
     if (isset($image)) {
         $source = $image['tmp_name'];
         $dir = "./images/vehicules/" . $plaque . "/img_vehicule.png";
+        $nomimage = "/images/vehicules/" . $plaque . "/img_vehicule.png";
         // Redimensionner l'image à la taille spécifiée (300x300)
         $newWidth = 300;
         $newHeight = 300;
@@ -136,7 +134,62 @@ function edit_image($image, $plaque) {
         imagedestroy($imageResized);
         imagedestroy($imageSource);
         // Retourner le chemin relatif de l'image redimensionnée
-        return $dir;
+        return $nomimage;
     }
+}
+// Fonction pour afficher un message d'erreur
+function displayInscriptionErrorMessage($errors) {
+    echo '<script>document.addEventListener("DOMContentLoaded", function() {
+    var messageDiv = document.getElementById("message");
+    var errorMessage = `<div class="alert alert-danger">
+        <section id="content" class="page-content">
+            <div class="card text-center">
+                <div class="card-header">
+                    <h3>Echec de l\'inscription</h3>
+                </div>
+                <div class="card-body">
+                    <p>Erreur(s) dans le formulaire d\'inscription :</p>
+                    <ul style="list-style-type:none;">'; // Début de la liste d'erreurs
+                        foreach ($errors as $error) {
+                            echo "<li>" . htmlspecialchars($error, ENT_QUOTES, 'UTF-8') . "</li>"; // Ajout de chaque erreur à la liste
+                        }
+        echo '       </ul>
+                    </div>
+                </div>
+            </section>
+        </div>
+    `;
+    messageDiv.innerHTML = errorMessage;
+    });
+    </script>';
+}
+
+// Fonction pour afficher un message de succès
+function displayInscriptionSuccessMessage() {
+    echo '<script>
+        document.addEventListener("DOMContentLoaded", function() {
+            var messageDiv = document.getElementById("message");
+            var successMessage = `
+                <div class="alert alert-success">
+                    <section id="content" class="page-content">
+                        <div class="card text-center">
+                            <div class="card-header">
+                                <h3>Inscription terminée</h3>
+                            </div>
+                            <div class="card-body">
+                                <h5>Bienvenue ' . htmlspecialchars($_POST['pseudo'], ENT_QUOTES, 'UTF-8') . '<br><br> vous êtes maintenant inscrit sur la plateforme!</h5><br>
+                                <p>Cliquez <a href="./index.php">ici</a> pour revenir à l\'acceuil</p>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            `;
+            messageDiv.innerHTML = successMessage;
+            // Redirection après un délai
+            setTimeout(function() {
+                window.location.href = "index.php";
+            }, 5000); // 5 secondes
+        });
+    </script>';
 }
 ?>

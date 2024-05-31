@@ -1,18 +1,58 @@
-//# AFFICHE MY EVENT
-var calendarMyEvents = $("#calendar-my-events").fullCalendar({
-  events: "./modele/event/fetch-my-events.php",
-  displayEventTime: false,
-  eventRender: function (event, element, view) {
+$(document).ready(function () {
+  // Initialisation du calendrier pour les événements de l'utilisateur actuel
+  var calendarMyEvents = $("#calendar-my-events").fullCalendar({
+    events: "./modele/event/fetch-my-events.php",
+    displayEventTime: false,
+    selectable: true,
+    selectHelper: true,
+    editable: false,
+    eventRender: eventRenderFunction,
+    eventClick: eventClickFunction,
+    eventMouseover: eventMouseoverFunction,
+    eventMouseout: eventMouseoutFunction,
+  });
+
+  // Initialisation du calendrier pour tous les événements
+  var calendarAllEvents = $("#calendar-all-events").fullCalendar({
+    events: "./modele/event/fetch-all-events.php",
+    displayEventTime: false,
+    selectable: true,
+    selectHelper: true,
+    editable: false,
+    eventRender: eventRenderFunction,
+    eventClick: eventClickFunction,
+    eventMouseover: eventMouseoverFunction,
+    eventMouseout: eventMouseoutFunction,
+  });
+
+  // Fonction pour rendre les événements
+  function eventRenderFunction(event, element, view) {
     if (event.allDay === "true") {
       event.allDay = true;
     } else {
       event.allDay = false;
     }
-  },
-  selectable: true,
-  selectHelper: true,
-  editable: false,
-  eventClick: function (event) {
+    element.bind("contextmenu", function (e) {
+      e.preventDefault(); // Empêche le menu contextuel par défaut de s'afficher
+      var deleteMsg = confirm("Voulez-vous vraiment supprimer la réservation?");
+      if (deleteMsg) {
+        $.ajax({
+          type: "POST",
+          url: "./modele/event/delete-event.php",
+          data: "&id=" + event.id,
+          success: function (response) {
+            if (parseInt(response) > 0) {
+              $(this).fullCalendar("removeEvents", event.id);
+              displayMessage("Réservation supprimée avec succès");
+            }
+          },
+        });
+      }
+    });
+  }
+
+  // Fonction pour gérer le clic sur un événement
+  function eventClickFunction(event) {
     // Afficher une pop-up avec les détails de l'événement
     alert(
       event.title +
@@ -28,194 +68,137 @@ var calendarMyEvents = $("#calendar-my-events").fullCalendar({
         " --> " +
         event.end.format("dddd DD MMMM YYYY HH:mm")
     );
-  },
-  eventRender: function (event, element, view) {
-    element.bind("contextmenu", function (e) {
-      e.preventDefault(); // Empêche le menu contextuel par défaut de s'afficher
-      var deleteMsg = confirm("Voulez-vous vraiment supprimer la réservation?");
-      if (deleteMsg) {
-        $.ajax({
-          type: "POST",
-          url: "./modele/event/delete-event.php",
-          data: "&id=" + event.id,
-          success: function (response) {
-            if (parseInt(response) > 0) {
-              $("#calendar-my-events").fullCalendar("removeEvents", event.id);
-              displayMessage("Réservation supprimée avec succès");
-            }
-          },
-        });
-      }
-    });
-  },
-  eventMouseover: function (event, jsEvent, view) {
+  }
+
+  // Fonction pour gérer le survol d'un événement
+  function eventMouseoverFunction(event, jsEvent, view) {
     // Change la forme du curseur lorsque vous survolez l'événement
     $(this).css("cursor", "pointer");
-  },
-  eventMouseout: function (event, jsEvent, view) {
+  }
+
+  // Fonction pour gérer la sortie du survol d'un événement
+  function eventMouseoutFunction(event, jsEvent, view) {
     // Réinitialise la forme du curseur lorsque vous ne survolez plus l'événement
     $(this).css("cursor", "auto");
-  },
-});
+  }
 
-//# AFFICHE ALL EVENTS
-$(document).ready(function () {
-var calendarAllEvents = $("#calendar-all-events").fullCalendar({
-  events: "./modele/event/fetch-all-events.php",
-  displayEventTime: false,
-  eventRender: function (event, element, view) {
-    if (event.allDay === "true") {
-      event.allDay = true;
-    } else {
-      event.allDay = false;
-    }
-  },
-  selectable: true,
-  selectHelper: true,
-  editable: false,
-  eventClick: function (event) {
-    // Afficher une pop-up avec les détails de l'événement
-    alert(
-      event.title +
-        " : \n" +
-        event.vehicule +
-        " pour le client " +
-        event.utilisateur +
-        "\n" +
-        "\n" +
-        "Période de réservation : " +
-        "\n" +
-        event.start.format("dddd DD MMMM YYYY HH:mm") +
-        " --> " +
-        event.end.format("dddd DD MMMM YYYY HH:mm")
-    );
-  },
-  eventRender: function (event, element, view) {
-    element.bind("contextmenu", function (e) {
-      e.preventDefault(); // Empêche le menu contextuel par défaut de s'afficher
-      var deleteMsg = confirm("Voulez-vous vraiment supprimer la réservation?");
-      if (deleteMsg) {
-        $.ajax({
-          type: "POST",
-          url: "./modele/event/delete-event.php",
-          data: "&id=" + event.id,
-          success: function (response) {
-            if (parseInt(response) > 0) {
-              $("#calendar-all-events").fullCalendar("removeEvents", event.id);
-              displayMessage("Réservation supprimée avec succès");
-            }
-          },
-        });
+  // Fonction pour afficher un message
+  function displayMessage(message) {
+     alert(message);
+  }
+
+  // Fonction pour ajouter un événement
+  function addAdminEvent(url, formId, calendarId) {
+    $(formId).submit(function (event) {
+      event.preventDefault(); // Empêche la soumission du formulaire par défaut
+
+      // Récupérer les valeurs des champs
+      var id_vehicule = $(formId + " #eventidVehiculeSelect").val();
+      var id_user = $(formId + " #eventidUserSelect").val();
+      var start = $(formId + " #eventStart").val();
+      var end = $(formId + " #eventEnd").val();
+
+      // Validation de base des champs
+      if (!id_vehicule || !id_user || !start || !end) {
+        displayMessage("Tous les champs sont requis.");
+        return;
       }
+
+      // Convertir le format datetime-local en format MySQL datetime
+      function convertToMySQLDateTime(datetimeLocal) {
+        return datetimeLocal.replace("T", " ") + ":00";
+      }
+      var startFormatted = convertToMySQLDateTime(start);
+      var endFormatted = convertToMySQLDateTime(end);
+
+      $.ajax({
+        url: url,
+        type: "POST",
+        data: {
+          id_vehicule: id_vehicule,
+          id_user: id_user,
+          start: startFormatted,
+          end: endFormatted,
+        },
+        success: function (response) {
+          var data = JSON.parse(response);
+          if (data.status === "success") {
+            alert(data.message);
+            $("#calendar-all-events").fullCalendar("refetchEvents"); // Met à jour les événements dans le calendrier
+          } else {
+            alert(data.message);
+            $("#calendar-all-events").fullCalendar("refetchEvents"); // Met à jour les événements dans le calendrier
+          }
+        },
+        error: function (xhr, status, error) {
+          console.error("Erreur lors de la création de l'événement:", error);
+          displayMessage("Erreur lors de la création de l'événement.");
+        },
+      });
     });
-  },
-  eventMouseover: function (event, jsEvent, view) {
-    // Change la forme du curseur lorsque vous survolez l'événement
-    $(this).css("cursor", "pointer");
-  },
-  eventMouseout: function (event, jsEvent, view) {
-    // Réinitialise la forme du curseur lorsque vous ne survolez plus l'événement
-    $(this).css("cursor", "auto");
-  },
-});
+  }
 
-//# AJOUTE EVENT ADMIN
-$(document).ready(function () {
-  $("#eventForm").submit(function (event) {
-    event.preventDefault(); // Empêche la soumission du formulaire par défaut
-    // Récupérer les valeurs des champs
-    var id_user = $("#eventidUserSelect").val();
-    var id_vehicule = $("#eventidVehiculeSelect").val();
-    var start = $("#eventStart").val();
-    var end = $("#eventEnd").val();
-    // Validation de base des champs
-    if (!id_user || !id_vehicule || !start || !end) {
-      displayMessage("Tous les champs sont requis.");
-      return;
-    }
-    // Convertir le format datetime-local en format MySQL datetime
-    function convertToMySQLDateTime(datetimeLocal) {
-      return datetimeLocal.replace("T", " ") + ":00";
-    }
-    var startFormatted = convertToMySQLDateTime(start);
-    var endFormatted = convertToMySQLDateTime(end);
+  // Fonction pour ajouter un événement utilisateur
+  function addUserEvent(url, formId, calendarId) {
+    $(formId).submit(function (event) {
+      event.preventDefault(); // Empêche la soumission du formulaire par défaut
 
-    $.ajax({
-      url: "./modele/event/add-event.php",
-      type: "POST",
-      data: {
-        id_user: id_user,
-        id_vehicule: id_vehicule,
-        start: startFormatted,
-        end: endFormatted,
-      },
-      success: function (response) {
-        displayMessage("Réservation créée avec succès.");
-        $("#eventForm")[0].reset();
-        $("#calendar-all-events").fullCalendar("refetchEvents"); // Met à jour les événements dans le calendrier
-      },
-      error: function (xhr, status, error) {
-        console.error("Erreur lors de la création de l'événement:", error);
-        displayMessage("Erreur lors de la création de l'événement.");
-      },
+      // Récupérer les valeurs des champs
+      var id_vehicule = $(formId + " #eventidVehiculeSelect").val();
+      var start = $(formId + " #eventStart").val();
+      var end = $(formId + " #eventEnd").val();
+
+      // Validation de base des champs
+      if (!id_vehicule || !start || !end) {
+        displayMessage("Tous les champs sont requis.");
+        return;
+      }
+
+      // Convertir le format datetime-local en format MySQL datetime
+      function convertToMySQLDateTime(datetimeLocal) {
+        return datetimeLocal.replace("T", " ") + ":00";
+      }
+      var startFormatted = convertToMySQLDateTime(start);
+      var endFormatted = convertToMySQLDateTime(end);
+
+      $.ajax({
+        url: url,
+        type: "POST",
+        data: {
+          id_vehicule: id_vehicule,
+          start: startFormatted,
+          end: endFormatted,
+        },
+        success: function (response) {
+          var data = JSON.parse(response);
+          if (data.status === "success") {
+            alert(data.message);
+            $("#eventMyForm")[0].reset();
+            $("#calendar-my-events").fullCalendar("refetchEvents"); // Met à jour les événements dans le calendrier
+          } else {
+            alert(data.message);
+            $("#calendar-my-events").fullCalendar("refetchEvents"); // Met à jour les événements dans le calendrier
+          }
+        },
+        error: function (xhr, status, error) {
+          console.error("Erreur lors de la création de l'événement:", error);
+          displayMessage("Erreur lors de la création de l'événement.");
+        },
+      });
     });
-  });
-  function displayMessage(message) {
-    alert(message);
   }
+
+  // Appel de la fonction pour ajouter un événement administratif
+  addAdminEvent(
+    "./modele/event/add-event.php",
+    "#eventForm",
+    "#calendar-all-events"
+  );
+
+  // Appel de la fonction pour ajouter un événement de l'utilisateur
+  addUserEvent(
+    "./modele/event/add-my-event.php",
+    "#eventMyForm",
+    "#calendar-my-events"
+  );
 });
-
-//# AJOUTE MY EVENT
-$(document).ready(function () {
-  $("#eventMyForm").submit(function (event) {
-    event.preventDefault(); // Empêche la soumission du formulaire par défaut
-
-    var id_vehicule = $("#eventidVehiculeSelect").val();
-    var start = $("#eventStart").val();
-    var end = $("#eventEnd").val();
-
-    // Convertir le format datetime-local en format MySQL datetime
-    function convertToMySQLDateTime(datetimeLocal) {
-      return datetimeLocal.replace("T", " ") + ":00";
-    }
-    var startFormatted = convertToMySQLDateTime(start);
-    var endFormatted = convertToMySQLDateTime(end);
-
-    $.ajax({
-      url: "./modele/event/add-my-event.php",
-      type: "POST",
-      data: {
-        id_vehicule: id_vehicule,
-        start: startFormatted,
-        end: endFormatted,
-      },
-      success: function (response) {
-        displayMessage("Réservation créée avec succès.");
-        $("#eventMyForm")[0].reset();
-        $("#calendar-my-events").fullCalendar("refetchEvents"); // Met à jour les événements dans le calendrier
-      },
-      error: function (xhr, status, error) {
-        console.error("Erreur lors de la création de l'événement:", error);
-        displayMessage("Erreur lors de la création de l'événement.");
-      },
-    });
-  });
-
-  // Fonction pour afficher les messages à l'utilisateur
-  function displayMessage(message) {
-    // Implémentez votre méthode d'affichage des messages ici
-    alert(message);
-  }
-});
-
-  // Fonction pour afficher les messages à l'utilisateur
-  function displayMessage(message) {
-    // Implémentez votre méthode d'affichage des messages ici
-    alert(message);
-  }
-});
-
-function displayMessage(message) {
-	    $("#message").html("<div class='alert alert-success'>"+message+"</div>");
-    setInterval(function() { $(".alert-success").fadeOut(); }, 3000);
-}

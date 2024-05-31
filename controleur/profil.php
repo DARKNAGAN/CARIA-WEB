@@ -1,22 +1,29 @@
 <?php
 require_once './modele/profil.php';
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_client'])) {
     $id = (int)$_SESSION['id_session'];
     post_RemoveClient($id);
-    header("Location: index.php"); // Redirigez vers la page appropriée après la suppression
-    displayDeleteProfilSuccessMessage();
+    header("Location: index.php"); // Rediriger vers la page appropriée après la suppression
     exit();
 }
+
 $vehicules = get_ProfilsInfo();
-// On récupère la valeur de nos variables passées par URL
+
+// Récupérer l'action et l'ID du membre depuis les paramètres URL
 $action = isset($_GET['action']) ? htmlspecialchars($_GET['action']) : 'consulter';
-$membre = isset($_GET['m']) ? (int)$_GET['m'] : '';
+$membreId = isset($_GET['m']) ? (int)$_GET['m'] : null;
 
 switch($action){
     case "consulter":
-        // On affiche les infos sur le membre
-        $data = get_MemberInfo();
-        require './vue/profile_view.html';
+        // Afficher les informations du membre
+        $userData = get_MemberInfo($membreId);
+        if ($userData === false) {
+            $message = "Impossible de récupérer les informations de l'utilisateur où il n'existe pas.";
+           require_once './vue/erreur.html';
+        } else {
+            require_once './vue/profile_view.html';
+        }
         break;
     case "modifier":
         handleProfileModification();
@@ -24,123 +31,181 @@ switch($action){
     default:
         echo '<p>Cette action est impossible</p>';
 }
-function handleProfileModification(){
+
+function handleProfileModification() {
     if (empty($_POST['sent'])) {
-        // On commence par s'assurer que le membre est connecté
-        // if ($id == 0) erreur(ERR_IS_NOT_CO);
-        // Les infos du membre
-        $data = get_MemberInfoId();
-        require './vue/edit_profile_view.html';
+        $userData = get_MemberInfoId();
+        require_once './vue/edit_profile_view.html';
     } else {
-        $i = 0;
-        $pass = /*md5*/($_POST['password']);
-        $confirm = /*md5*/($_POST['confirm']);
+        // Collecter les données du formulaire
+        $id = (int)$_SESSION['id_session'];
+        $pseudo = $_SESSION['pseudo_session'];
+        $password = $_POST['password'];
+        $confirm = $_POST['confirm'];
         $email = $_POST['email'];
         $localisation = $_POST['localisation'];
         $phone = $_POST['phone'];
-        $pseudo = $_SESSION['pseudo_session'];
-        $extensions_valides = array('jpg', 'jpeg', 'gif', 'png');
-        // Vérification des champs du formulaire
-        if ($pass != $confirm || empty($confirm) || empty($pass)) {
-            $mdp_erreur = "Votre mot de passe et la confirmation sont différents ou sont vides";
-            $i++;
+        $avatar = $_FILES['avatar'];
+        $errors = [];
+
+        // Validation de l'email
+        if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $errors[] = "L'adresse e-mail est requise et doit être valide.";
         }
+
+        if (!get_checkMyMail($email, $id)) {
+            $errors[] = "Votre adresse email est déjà utilisée par un membre.";
+        }
+
+        // Validation du mot de passe
+        if (empty($password) || strlen($password) < 6 || strlen($password) > 32) {
+            $errors[] = "Le mot de passe est requis et doit contenir entre 6 et 32 caractères.";
+        }
+
+        if (!preg_match('/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&]).+$/', $password)) {
+            $errors[] = "Le mot de passe doit contenir au moins une lettre, un chiffre et un caractère spécial (@$!%*?&)";
+        }
+
+        if ($password !== $confirm) {
+            $errors[] = "Les mots de passe ne correspondent pas.";
+        }
+
+        // Validation du numéro de téléphone
+        if (empty($phone) || strlen($phone) < 10 || strlen($phone) > 15) {
+            $errors[] = "Le numéro de téléphone est requis et doit contenir entre 10 et 15 caractères.";
+        }
+
+        if (preg_match('/^\s+$/', $phone)) {
+            $errors[] = "Le numéro de téléphone ne peut pas être composé uniquement d'espaces.";
+        }
+
+        if (!preg_match('/^\d+$/', $phone)) {
+            $errors[] = "Le numéro de téléphone ne doit contenir que des chiffres.";
+        }
+
+        // Validation de l'adresse postale
+        if (empty($localisation) || strlen($localisation) < 6 || strlen($localisation) > 50) {
+            $errors[] = "L'adresse postale est requise et doit contenir entre 6 et 50 caractères.";
+        }
+
+        if (!preg_match('/^[A-Za-zÀ-ÖØ-öø-ÿ0-9 ]+$/', $localisation)) {
+            $errors[] = "L'adresse postale peut contenir uniquement des lettres, des chiffres et des espaces.";
+        }
+
+        if (preg_match('/^\s+$/', $localisation)) {
+            $errors[] = "L'adresse ne peut pas être composée uniquement d'espaces.";
+        }
+
+        // Validation de l'avatar
         if (!empty($_FILES['avatar']['size'])) {
-            $extension_upload = strtolower(substr(strrchr($_FILES['avatar']['name'], '.'), 1));
+            $maxFileSize = 5 * 1024 * 1024; // 5 Mo en octets
+            if ($_FILES['avatar']['size'] > $maxFileSize) {
+                $errors[] = "La taille de l'avatar dépasse la limite autorisée de 5 Mo.";
+            }
+
+            $extensions_valides = ['jpg', 'jpeg', 'gif', 'png'];
+            $extension_upload = strtolower(pathinfo($_FILES['avatar']['name'], PATHINFO_EXTENSION));
             if (!in_array($extension_upload, $extensions_valides)) {
-                $i++;
-                $avatar_erreur3 = "Extension de l'avatar incorrecte";
+                $errors[] = "Extension de l'avatar incorrecte. Seules les extensions JPG, JPEG, GIF et PNG sont autorisées.";
+            }
+
+            $allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif'];
+            $fileMimeType = mime_content_type($_FILES['avatar']['tmp_name']);
+            if (!in_array($fileMimeType, $allowedMimeTypes)) {
+                $errors[] = "Type de fichier non pris en charge. Veuillez télécharger une image au format JPG, JPEG, GIF ou PNG.";
             }
         }
-        if ($i == 0) {
+
+        if (empty($errors)) {
             if (isset($_POST['delete'])) {
                 post_RemoveAvatar($pseudo);
             }
-            // On modifie la table
-            post_UpdateProfile($pseudo, $pass, $email, $localisation, $phone);
-            $data = get_MemberInfoId(); // Récupérer les informations mises à jour
+            post_UpdateProfile($_SESSION['id_session'], $pseudo, $password, $email, $localisation, $phone, $avatar);
+            $userData = get_MemberInfoId(); // Récupérer les informations mises à jour
             require_once './vue/edit_profile_view.html';
             displayModificationProfilSuccessMessage();
-            exit;
+            exit();
         } else {
-		$data = get_MemberInfoId(); // Récupérer les informations mises à jour
-		require_once './vue/edit_profile_view.html';
-		displayModificationProfilErrorMessage($i, $avatar_erreur3 ?? null, $mdp_erreur ?? null);
+            $userData = get_MemberInfoId(); // Récupérer les informations pour afficher les erreurs
+            require_once './vue/edit_profile_view.html';
+            displayModificationProfilErrorMessage($errors);
         }
     }
 }
-// Fonction pour afficher un message de succès
+
+// Fonction pour afficher un message de succès lors de la modification du profil
 function displayModificationProfilSuccessMessage() {
     echo '<script>
         document.addEventListener("DOMContentLoaded", function() {
             var messageDiv = document.getElementById("message");
             var successMessage = `
-				<div class="alert alert-success">
+                <div class="alert alert-success">
                     <section id="content" class="page-content">
                         <div class="card text-center">
                             <div class="card-header">
-								<h2>Modification de profil terminée</h2>
-							</div>
-							<div class="card-body">
-								<h5>Votre profil a été modifié avec succès !</h5>
-							</div>
-						</div>
-					</section>
-				</div>
+                                <h2>Modification de profil terminée</h2>
+                            </div>
+                            <div class="card-body">
+                                <h5>Votre profil a été modifié avec succès !</h5>
+                            </div>
+                        </div>
+                    </section>
+                </div>
             `;
             messageDiv.innerHTML = successMessage;
         });
     </script>';
 }
-function displayModificationProfilErrorMessage($i, $avatar_erreur3 = null, $mdp_erreur = null) {
+
+// Fonction pour afficher un message d'erreur lors de la modification du profil
+function displayModificationProfilErrorMessage($errors) {
     echo '<script>
         document.addEventListener("DOMContentLoaded", function() {
             var messageDiv = document.getElementById("message");
             var errorMessage = `
-				<div class="alert alert-danger">
+                <div class="alert alert-danger">
                     <section id="content" class="page-content">
                         <div class="card text-center">
                             <div class="card-header">
-								<h2>Modification de profil interrompue</h2>
-							</div>
-							<div class="card-body">
-								<h5>Nous avons rencontré ' . $i . ' erreur(s) lors de la modification de votre profil :</h5><br>
-								<ul style="list-style-type:none;">';
-									if (isset($avatar_erreur3)) {
-										echo '<li>' . $avatar_erreur3 . '</li>';
-									}
-									if (isset($mdp_erreur)) {
-										echo '<li>' . $mdp_erreur . '</li>';
-									}
-		echo '      			</ul>
-							</div>
-						</div>
-					</section>
-				</div>
+                                <h3>Échec de la modification du profil</h3>
+                            </div>
+                            <div class="card-body">
+                                <p>Erreur(s) dans le formulaire de modification :</p>
+                                <ul style="list-style-type:none;">';
+            foreach ($errors as $error) {
+                echo "<li>" . htmlspecialchars($error, ENT_QUOTES, 'UTF-8') . "</li>"; // Ajouter chaque erreur à la liste
+            }
+            echo '           </ul>
+                            </div>
+                        </div>
+                    </section>
+                </div>
             `;
             messageDiv.innerHTML = errorMessage;
         });
     </script>';
 }
+
+// Fonction pour afficher un message de succès lors de la suppression du profil
 function displayDeleteProfilSuccessMessage() {
     echo '<script>
         document.addEventListener("DOMContentLoaded", function() {
             var messageDiv = document.getElementById("message");
-            var errorMessage = `
-				<div class="alert alert-success">
+            var successMessage = `
+                <div class="alert alert-success">
                     <section id="content" class="page-content">
                         <div class="card text-center">
                             <div class="card-header">
                                 <h2>Suppression de compte confirmée</h2>
-							</div>
-							<div class="card-body">
+                            </div>
+                            <div class="card-body">
                                 <p>Votre compte a été supprimé avec succès. Nous vous remercions pour votre utilisation de notre service.</p>
-							</div>
-						</div>
-					</section>
-				</div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
             `;
-            messageDiv.innerHTML = errorMessage;
+            messageDiv.innerHTML = successMessage;
         });
     </script>';
 }

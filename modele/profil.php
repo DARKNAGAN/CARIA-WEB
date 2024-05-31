@@ -1,67 +1,66 @@
 <?php
-# Connexion modele
-class Connexion 
-{
-    public function checkCredentials($pseudo, $password) {
-		// Ici, vous devriez effectuer la validation des identifiants
-        // en interagissant avec une base de données ou une autre source de données.
-        // Pour simplifier, nous supposerons que les identifiants sont corrects.
-        return true;
+class Connexion {
+   // Méthode pour enregistrer une tentative de connexion infructueuse
+    public function recordFailedLoginAttempt($pseudo) {
+        global $bdd;
+        $timestamp = time();
+        $req = $bdd->prepare('INSERT INTO tentatives_connexion (pseudo, timestamp) VALUES (:pseudo, :timestamp)');
+        $req->bindValue(':pseudo', $pseudo, PDO::PARAM_STR);
+        $req->bindValue(':timestamp', $timestamp, PDO::PARAM_INT);
+        $req->execute();
     }
-function check_Password(){
-		global $bdd;
-		$pseudo=$_POST['pseudo_connect'];
-		$req = $bdd->prepare('SELECT mdp, id, privilege, pseudo FROM Clients WHERE pseudo = :pseudo');
-		$req->bindValue(':pseudo',$pseudo , PDO::PARAM_STR);
-		$req->execute();
-		$data = $req->fetch();
-		return $data;
-	}
-}
-function get_MemberCount(){
+
+    // Méthode pour vérifier si un utilisateur est bloqué
+    public function isUserBlocked($pseudo) {
+        global $bdd;
+        $blockDuration = 300; // Durée de blocage en secondes (300 secondes = 5 minutes)
+        $timestamp = time() - $blockDuration; // Calculer le timestamp il y a 5 minutes
+
+        $req = $bdd->prepare('SELECT COUNT(*) AS attempts FROM tentatives_connexion WHERE pseudo = :pseudo AND timestamp > :timestamp');
+        $req->bindValue(':pseudo', $pseudo, PDO::PARAM_STR);
+        $req->bindValue(':timestamp', $timestamp, PDO::PARAM_INT);
+        $req->execute();
+        $result = $req->fetch(PDO::FETCH_ASSOC);
+
+        // Si le nombre de tentatives de connexion infructueuses dépasse un certain seuil, l'utilisateur est bloqué
+        return $result['attempts'] >= 3; // Vous pouvez ajuster ce nombre selon vos besoins
+    }
+    function get_MemberInfoId(){
 	global $bdd;
-	$TotalDesMembres = $bdd->query('SELECT COUNT(*) FROM Clients')->fetchColumn();
-	return $TotalDesMembres;
-}
-function get_LastMember(){
-	global $bdd;
-	$req = $bdd->query('SELECT pseudo, id FROM Clients ORDER BY id DESC LIMIT 0, 1');
-	$data = $req->fetch();
-	return $data;
-}
-function get_checkPseudo(){
-	global $bdd;
-	$pseudo=$_POST['pseudo'];
-	$req = $bdd->prepare('SELECT COUNT(*) AS nbr FROM Clients WHERE pseudo =:pseudo');
-	$req->bindValue(':pseudo',$pseudo, PDO::PARAM_STR);
+	$id=(isset($_SESSION['id_session']))?(int) $_SESSION['id_session']:0;
+
+	//On prend les infos du membre
+	$req = $bdd->prepare('SELECT pseudo, mdp, email, avatar, adresse, prenom, nom, phone, dateenregistre FROM Clients WHERE id=:id');
+	$req->bindValue(':id',$id,PDO::PARAM_INT);
 	$req->execute();
-	$pseudo_free=($req->fetchColumn()==0)?1:0;
-	$req->CloseCursor();
-	return $pseudo_free;
+	$userData = $req->fetch();
+	return $userData;
+    }
+
+    public function checkCredentials($pseudo, $password) {
+        global $bdd;
+        $req = $bdd->prepare('SELECT mdp FROM Clients WHERE pseudo = :pseudo');
+        $req->bindValue(':pseudo', $pseudo, PDO::PARAM_STR);
+        $req->execute();
+        $userData = $req->fetch();
+        if ($userData && password_verify($password, $userData['mdp'])) {
+            return true;
+        }
+        return false;
+    }
+
+    public function check_Password($pseudo) {
+        global $bdd;
+        $req = $bdd->prepare('SELECT mdp, id, privilege, pseudo FROM Clients WHERE pseudo = :pseudo');
+        $req->bindValue(':pseudo', $pseudo, PDO::PARAM_STR);
+        $req->execute();
+        $userData = $req->fetch(PDO::FETCH_ASSOC);
+        return $userData ?: null; // Renvoyer null si aucune donnée n'est trouvée
+    }
 }
-function get_checkMail(){
-	global $bdd;
-	$email = $_POST['email'];
-	$req = $bdd->prepare('SELECT COUNT(*) AS nbr FROM Clients WHERE email =:mail');
-	$req->bindValue(':mail',$email, PDO::PARAM_STR);
-	$req->execute();
-	$mail_free=($req->fetchColumn()==0)?1:0;
-	$req->CloseCursor();
-	return $mail_free;
-}
-function get_ProfilsInfo(){ // Informations de tout les vehicules dans un tableau
-    global $bdd;
-    $req = $bdd->prepare('SELECT id, privilege, dateenregistre, pseudo, prenom, nom, phone, adresse, mdp, email, avatar, phone FROM Clients ORDER BY id');
-    $req->execute();
-    $data = $req->fetchAll(PDO::FETCH_ASSOC);
-    return $data;
-}
-function get_MemberInfo(){
-	global $bdd;
-	$membre = isset($_GET['m']) ? (int)$_GET['m'] : 0;
-	$req = $bdd->prepare('SELECT pseudo, mdp, email, avatar, adresse, prenom, nom, phone, dateenregistre FROM Clients WHERE id = :membre');
-	$req->execute(array(':membre' => $membre));
-	return $req->fetch(PDO::FETCH_ASSOC);
+// Fonction pour vérifier si l'email est disponible
+function isEmailAvailable($email) {
+    return get_checkMail($email);
 }
 function get_MemberInfoId(){
 	global $bdd;
@@ -71,185 +70,190 @@ function get_MemberInfoId(){
 	$req = $bdd->prepare('SELECT pseudo, mdp, email, avatar, adresse, prenom, nom, phone, dateenregistre FROM Clients WHERE id=:id');
 	$req->bindValue(':id',$id,PDO::PARAM_INT);
 	$req->execute();
-	$data = $req->fetch();
-	return $data;
+	$userData = $req->fetch();
+	return $userData;
 }
-function get_checkMail2(){
-	global $bdd;
-	$id=(isset($_SESSION['id_session']))?(int) $_SESSION['id_session']:0;
-	//On commence donc par récupérer le mail
-	$req = $bdd->prepare('SELECT email FROM Clients WHERE id =:id'); 
-	$req->bindValue(':id',$id,PDO::PARAM_INT);
-	$req->execute();
-	$data = $req->fetch();
-	return $data;
+
+function get_MemberCount() {
+    global $bdd;
+    return $bdd->query('SELECT COUNT(*) FROM Clients')->fetchColumn();
 }
-function get_Pseudo(){
-	global $bdd;
-	$id=(isset($_SESSION['id_session']))?(int) $_SESSION['id_session']:0;
-	//On commence donc par récupérer le pseudo
-	$req = $bdd->prepare('SELECT pseudo FROM Clients WHERE id =:id'); 
-	$req->bindValue(':id',$id,PDO::PARAM_INT);
-	$req->execute();
-	$data = $req->fetch();
-	return $data;
+
+function get_LastMember() {
+    global $bdd;
+    $req = $bdd->query('SELECT pseudo, id FROM Clients ORDER BY id DESC LIMIT 1');
+    return $req->fetch();
 }
-function get_checkCopyMail(){
-	global $bdd;
-	$email = $_POST['email'];
-	//Il faut que l'adresse email n'ait jamais été utilisée
-	$req = $bdd->prepare('SELECT COUNT(*) AS nbr FROM Clients WHERE email =:mail');
-	$req->bindValue(':mail',$email,PDO::PARAM_STR);
-	$req->execute();
-	$mail_free = ($req->fetchColumn()==0)?1:0;
-	$req->CloseCursor();
-	return $mail_free;
+
+function get_checkPseudo($pseudo) {
+    global $bdd;
+    $req = $bdd->prepare('SELECT COUNT(*) AS nbr FROM Clients WHERE pseudo = :pseudo');
+    $req->bindValue(':pseudo', $pseudo, PDO::PARAM_STR);
+    $req->execute();
+    return $req->fetchColumn() == 0;
 }
-# Inscription modele
-function post_Registre(){
-	global $bdd;
-	$pseudo=$_POST['pseudo'];
-	$pass = /*md5*/($_POST['password']);
-	$email = $_POST['email'];
-	$localisation = $_POST['localisation'];
-	$prenom = $_POST['prenom'];
-	$nom = $_POST['nom'];
-	$phone = $_POST['phone'];
-	$image = $_FILES['avatar'];
-    // Créer le répertoire pour les images si nécessaire
+
+function get_checkMail($email) {
+    global $bdd;
+    $req = $bdd->prepare('SELECT COUNT(*) AS nbr FROM Clients WHERE email = :mail');
+    $req->bindValue(':mail', $email, PDO::PARAM_STR);
+    $req->execute();
+    return $req->fetchColumn() == 0;
+}
+
+function get_checkMyMail($email,$id) {
+    global $bdd;
+    $req = $bdd->prepare('SELECT COUNT(*) AS nbr FROM Clients WHERE email = :mail AND id != :id');
+    $req->bindValue(':mail', $email, PDO::PARAM_STR);
+    $req->bindValue(':id', $id, PDO::PARAM_INT);
+    $req->execute();
+    return $req->fetchColumn() == 0;
+}
+
+function get_ProfilsInfo() {
+    global $bdd;
+    $req = $bdd->query('SELECT id, privilege, dateenregistre, pseudo, prenom, nom, phone, adresse, mdp, email, avatar FROM Clients ORDER BY id');
+    return $req->fetchAll(PDO::FETCH_ASSOC);
+}
+
+function get_MemberInfo($id) {
+    global $bdd;
+    $req = $bdd->prepare('SELECT pseudo, mdp, email, avatar, adresse, prenom, nom, phone, dateenregistre FROM Clients WHERE id = :id');
+    $req->bindValue(':id', $id, PDO::PARAM_INT);
+    $req->execute();
+    return $req->fetch(PDO::FETCH_ASSOC);
+}
+
+function post_Registre($pseudo, $password, $email, $localisation, $prenom, $nom, $phone, $avatar) {
+    global $bdd;
+    $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+    $imagePath = handleAvatarUpload($pseudo, $avatar);
+
+    $req = $bdd->prepare('INSERT INTO Clients (pseudo, mdp, email, avatar, adresse, prenom, nom, phone, dateenregistre)
+                          VALUES (:pseudo, :pass, :email, :avatar, :localisation, :prenom, :nom, :phone, NOW())');
+    $req->bindValue(':pseudo', $pseudo, PDO::PARAM_STR);
+    $req->bindValue(':pass', $hashedPassword, PDO::PARAM_STR);
+    $req->bindValue(':email', $email, PDO::PARAM_STR);
+    $req->bindValue(':avatar', $imagePath, PDO::PARAM_STR);
+    $req->bindValue(':localisation', $localisation, PDO::PARAM_STR);
+    $req->bindValue(':prenom', $prenom, PDO::PARAM_STR);
+    $req->bindValue(':nom', $nom, PDO::PARAM_STR);
+    $req->bindValue(':phone', $phone, PDO::PARAM_STR);
+    $req->execute();
+}
+
+// Pour la fonction post_UpdateProfile
+function post_UpdateProfile($id, $pseudo, $pass = null, $email = null, $localisation = null, $phone = null, $avatar = null) {
+    global $bdd;
+    $fields = [];
+    $params = [':id' => $id];
+
+    if ($pass !== null) {
+        $fields[] = 'mdp = :mdp';
+        $params[':mdp'] = password_hash($pass, PASSWORD_DEFAULT);
+    }
+    if ($email !== null) {
+        $fields[] = 'email = :mail';
+        $params[':mail'] = $email;
+    }
+    if ($localisation !== null) {
+        $fields[] = 'adresse = :loc';
+        $params[':loc'] = $localisation;
+    }
+    if ($phone !== null) {
+        $fields[] = 'phone = :phone';
+        $params[':phone'] = $phone;
+    }
+    if (!empty($_FILES['avatar']['name'])) {
+    $fields[] = 'avatar = :avatar';
+    $params[':avatar'] = handleAvatarUpload($pseudo, $_FILES['avatar']);
+    }
+
+    $sql = 'UPDATE Clients SET ' . implode(', ', $fields) . ' WHERE id = :id';
+    $req = $bdd->prepare($sql);
+    foreach ($params as $key => $value) {
+        $req->bindValue($key, $value, PDO::PARAM_STR);
+    }
+    $req->execute();
+}
+
+function handleAvatarUpload($pseudo, $avatar) {
     $dirPath = "./images/avatars/" . $pseudo . "/";
+    $Path = "./images/avatars/" . $pseudo . "/";
+	$defaultDirImagePath = "./images/avatars/img_user.jpg";
+    $dirImagePath = "./images/avatars/" . $pseudo . "/img_user.jpg";
+    $imagePath = "/images/avatars/" . $pseudo . "/img_user.jpg";
     if (!is_dir($dirPath)) {
         mkdir($dirPath, 0700, true);
     }
-    // Vérifier si l'image est fournie et valide
-    if (!empty($image['size']) && $image['error'] === UPLOAD_ERR_OK) {
-        $nomimage = edit_avatar($image, $pseudo);
+    if (!empty($avatar['size']) && $avatar['error'] === UPLOAD_ERR_OK) {
+        return edit_avatar($avatar, $pseudo);
     } else {
-        // Utiliser une image par défaut si aucune image n'est fournie
-        $defaultImagePath = "./images/avatars/img_user.jpg";
-        $dirPath = "./images/avatars/" . $pseudo . "/img_user.jpg";
-        $nomimage = "/images/avatars/" . $pseudo . "/img_user.jpg";
-        copy($defaultImagePath, $dirPath);
+        copy($defaultDirImagePath, $dirImagePath);
+        return $imagePath;
     }
-	$req = $bdd->prepare('INSERT INTO Clients (pseudo, mdp, email, avatar, adresse, prenom, nom, phone, dateenregistre)
-						VALUES (:pseudo, :pass, :email, :nomimage, :localisation, :prenom, :nom, :phone, NOW())');
-	$req->bindValue(':pseudo', $pseudo, PDO::PARAM_STR);
-	$req->bindValue(':pass', $pass, PDO::PARAM_STR);
-	$req->bindValue(':email', $email, PDO::PARAM_STR);
-	$req->bindValue(':nomimage', $nomimage, PDO::PARAM_STR);
-	$req->bindValue(':localisation', $localisation, PDO::PARAM_STR);
-	$req->bindValue(':prenom', $prenom, PDO::PARAM_STR);
-	$req->bindValue(':nom', $nom, PDO::PARAM_STR);
-	$req->bindValue(':phone', $phone, PDO::PARAM_STR);
-	$req->execute();
+}
+
+function edit_avatar($image, $pseudo) {
+	$defaultDirImagePath = "./images/avatars/img_user.jpg";
+    $dirImagePath = "./images/avatars/" . $pseudo . "/img_user.jpg";
+    $imagePath = "/images/avatars/" . $pseudo . "/img_user.jpg";
+    $newWidth = 300;
+    $newHeight = 300;
+    list($width, $height) = getimagesize($image['tmp_name']);
+    $imageResized = imagecreatetruecolor($newWidth, $newHeight);
+    
+    switch (exif_imagetype($image['tmp_name'])) {
+        case IMAGETYPE_JPEG:
+            $imageSource = imagecreatefromjpeg($image['tmp_name']);
+            break;
+        case IMAGETYPE_PNG:
+            $imageSource = imagecreatefrompng($image['tmp_name']);
+            break;
+        case IMAGETYPE_GIF:
+            $imageSource = imagecreatefromgif($image['tmp_name']);
+            break;
+        default:
+            return "Unsupported image type";
+    }
+    
+    imagecopyresampled($imageResized, $imageSource, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+    imagejpeg($imageResized, $dirImagePath, 85);
+    imagedestroy($imageResized);
+    imagedestroy($imageSource);
+    return $imagePath;
 }
 function post_RemoveAvatar($pseudo){
 	global $bdd;
 	$id=(isset($_SESSION['id_session']))?(int) $_SESSION['id_session']:0;
+	$defaultDirImagePath = "./images/avatars/img_user.jpg";
+    $dirImagePath = "./images/avatars/" . $pseudo . "/img_user.jpg";
+    $imagePath = "/images/avatars/" . $pseudo . "/img_user.jpg";
 	// Utiliser une image par défaut si aucune image n'est fournie
-	$defaultImagePath = "./images/avatars/img_user.jpg";
-	$dirPath = "./images/avatars/" . $pseudo . "/img_user.jpg";
-	$nomimage = "./images/avatars/" . $pseudo . "/img_user.jpg";
-	copy($defaultImagePath, $dirPath);
+    copy($defaultDirImagePath, $imagePath);
 }
-function post_UpdateProfile($pseudo, $pass = null, $email = null, $localisation = null, $phone = null) {
-    global $bdd;
-    $id = isset($_SESSION['id_session']) ? (int)$_SESSION['id_session'] : 0;
-    // Mise à jour de l'avatar
-    if (isset($_FILES['avatar'])) {
-        $image = $_FILES['avatar'];
-        $dirPath = "./images/avatars/" . $pseudo . "/";
-        // Vérifier si l'image est fournie et valide
-        if (!empty($image['size']) && $image['error'] === UPLOAD_ERR_OK) {
-            $nomimage = edit_avatar($image, $pseudo);
-        } else {
-            // Utiliser une image par défaut si aucune image n'est fournie
-            $defaultImagePath = "./images/avatars/img_user.jpg";
-            $dirPath = "./images/avatars/" . $pseudo . "/img_user.jpg";
-            $nomimage = "./images/avatars/" . $pseudo . "/img_user.jpg";
-            file_exists($nomimage) ? : copy($defaultImagePath, $nomimage);
-        }
-    }
-    // Mise à jour des informations du membre
-    if ($pass !== null || $email !== null || $localisation !== null || $phone !== null) {
-        $fields = [];
-        $params = [':id' => $id];
-        if ($pass !== null) {
-            $fields[] = 'mdp = :mdp';
-            $params[':mdp'] = $pass; // Utilisez password_hash($pass, PASSWORD_DEFAULT) pour sécuriser les mots de passe
-        }
-        if ($email !== null) {
-            $fields[] = 'email = :mail';
-            $params[':mail'] = $email;
-        }
-        if ($localisation !== null) {
-            $fields[] = 'adresse = :loc';
-            $params[':loc'] = $localisation;
-        }
-        if ($phone !== null) {
-            $fields[] = 'phone = :phone';
-            $params[':phone'] = $phone;
-        }
-        if (!empty($fields)) {
-            $sql = 'UPDATE Clients SET ' . implode(', ', $fields) . ' WHERE id = :id';
-            $req = $bdd->prepare($sql);
-            $req->execute($params);
-        }
-    }
-}
-function edit_avatar($image, $pseudo) {
-    if (isset($image)) {
-        $source = $image['tmp_name'];
-        $dir = "./images/avatars/" . $pseudo . "/img_user.jpg";
-        // Redimensionner l'image à la taille spécifiée (300x300)
-        $newWidth = 300;
-        $newHeight = 300;
-        list($width, $height) = getimagesize($source);
-        $imageResized = imagecreatetruecolor($newWidth, $newHeight);
-        switch (exif_imagetype($source)) {
-            case IMAGETYPE_JPEG:
-                $imageSource = imagecreatefromjpeg($source);
-                break;
-            case IMAGETYPE_PNG:
-                $imageSource = imagecreatefrompng($source);
-                break;
-            case IMAGETYPE_GIF:
-                $imageSource = imagecreatefromgif($source);
-                break;
-            default:
-                return "Unsupported image type";
-        }
-        imagecopyresized($imageResized, $imageSource, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
-        // Sauvegarder l'image redimensionnée en JPEG
-        imagejpeg($imageResized, $dir, 85); // Le troisième paramètre est la qualité de l'image JPEG (0-100)
-        // Libérer la mémoire
-        imagedestroy($imageResized);
-        imagedestroy($imageSource);
-        // Retourner le chemin relatif de l'image redimensionnée
-        return $dir;
-    }
-}
+
 function post_RemoveClient($id) {
     global $bdd;
-    $id = $_SESSION['id_session'];
-    // Récupérer le chemin de l'image à partir de la base de données
+    // Suppression de l'image
     $req = $bdd->prepare('SELECT avatar FROM Clients WHERE id= :id');
     $req->bindValue(':id', $id, PDO::PARAM_INT);
     $req->execute();
-    $data = $req->fetch(PDO::FETCH_ASSOC);
-    if ($data) {
-        // Supprimer l'image
-        $imagePath = $data['avatar'];
-        unlink($imagePath);
-        // Supprimer le dossier
+    $userData = $req->fetch(PDO::FETCH_ASSOC);
+    if ($userData) {
+        $imagePath = $userData['avatar'];
+        if (file_exists($imagePath)) {
+            unlink($imagePath);
+        }
         $folderPath = dirname($imagePath);
-        rmdir($folderPath);
+        if (is_dir($folderPath)) {
+            rmdir($folderPath);
+        }
     }
-    // Supprimer le véhicule de la base de données
+    // Suppression de l'utilisateur de la base de données
     $req = $bdd->prepare('DELETE FROM Clients WHERE id=:id');
     $req->bindValue(':id', $id, PDO::PARAM_INT);
     $req->execute();
-    $req->closeCursor();
-    session_destroy(); // Vous pouvez adapter cette étape en fonction de votre gestion de sessions
+    session_destroy();
 }
 ?>

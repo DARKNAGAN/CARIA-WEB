@@ -31,12 +31,10 @@
         <div class="col">
             <div class="card">
                 <div class="card-header">
-                    <h3>La plateforme en chiffre</h3>
+                    <h3>Véhicule actuellement en circulation</h3>
                 </div>
                 <div class="card-body">
-                    <p>La plateforme compte <strong><?php echo $TotalDesMembres; ?></strong> membres.</p>
-                    <p><strong><?php echo $TotalDesVehicules; ?></strong> véhicules disponibles à la réservation sur la plateforme.</p>
-                    <p><a href="./profil.php?m=<?php echo $data['id']; ?>&amp;action=consulter"><?php echo $derniermembre; ?></a> est le dernier membre inscrit.</p>
+                    <div id="map"></div>
                 </div>
             </div>
         </div>

@@ -41,9 +41,15 @@ function getCookie(name) {
     return null;
 }
 
-function acceptCookies() {
+function accepterCookies() {
     document.cookie = "cookieConsent=true; max-age=" + 60*60*24*365 + "; path=/";
     document.getElementById("cookieConsent").classList.add("d-none");
+}
+
+function refuserCookies() {
+  document.cookie =
+    "cookieConsent=false; max-age=" + 60*60*24*365 + "; path=/";
+  document.getElementById("cookieConsent").classList.add("d-none");
 }
 
 window.onload = function() {

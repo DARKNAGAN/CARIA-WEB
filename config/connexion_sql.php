@@ -2,7 +2,7 @@
 // Connexion à la base de données
 try
 {
-    $bdd = new PDO('mysql:host=IP:3307;dbname=CARIA', 'user', 'mdp',array(PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8"));
+    $bdd = new PDO('mysql:host=IP:3307;dbname=CARIA', 'USER', 'MDP',array(PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8"));
 }
 catch(Exception $e)
 {

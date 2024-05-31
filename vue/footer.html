@@ -16,16 +16,26 @@
 	<script type='text/javascript' src="./js/script_map.js"></script>
 	<script type='text/javascript' src="./js/script.js"></script>
 	<footer>   
-		<div id="cookieConsent" class="d-none">
+		<div id="cookieConsent" class="d-none text-center">
 			<div class="container">
 				<div class="card bg-dark text-white">
 					<div class="card-body">
 						<div class="row">
-							<div class="col-md-10">
-								<p>Nous utilisons des cookies pour améliorer votre expérience sur notre site. En poursuivant votre navigation, vous acceptez notre utilisation des cookies. Pour en savoir plus, consultez notre <a href="policy.php" class="text-warning">politique de confidentialité</a>.</p>
+							<div class="col">
+								<p>
+									Nous utilisons des cookies pour améliorer votre expérience sur notre site.<br>
+									En poursuivant votre navigation, vous acceptez notre utilisation des cookies.<br>
+									Pour en savoir plus, consultez notre 
+									<a href="policy.php" class="text-warning">politique de confidentialité</a>.
+								</p>
 							</div>
-							<div class="col-md-2 text-md-end">
-								<button class="btn btn-success" onclick="acceptCookies()">J'accepte</button>
+						</div>
+						<div class="row">
+							<div class="col d-grid">
+								<button class="btn btn-success" onclick="accepterCookies()">Accepter</button>
+							</div>
+							<div class="col d-grid">
+								<button class="btn btn-danger" onclick="refuserCookies()">Refuser</button>
 							</div>
 						</div>
 					</div>
@@ -36,7 +46,7 @@
 			<div class="row">
 				<div class="col">
 					<p class="footer fw-bold">CARIA Project | Cunat-Brulé &copy; 2023-2024 Tous droits réservés</>
-					<p><a href="policy.php">[Politique de confidentialité] | [Mentions légales]</a></p>
+					<p><a href="policy.php">[Politique de confidentialité]</a> - <a href="legal.php">[Mentions légales]</a></p>
 				</div>
 			</div>
 		</div>  

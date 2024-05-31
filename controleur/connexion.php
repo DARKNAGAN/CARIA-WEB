@@ -5,20 +5,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $pseudoCo = $_POST['pseudo_connect'] ?? '';
     $passwordCo = $_POST['password_connect'] ?? '';
 
-    // Vérification des identifiants
+    // Vérification des identifiants en utilisant la méthode checkCredentials()
     $connexionModel = new Connexion();
-    $userData = $connexionModel->check_Password($pseudoCo);
 
+    // Vérifier si l'utilisateur est bloqué
+    if ($connexionModel->isUserBlocked($pseudoCo)) {
+        // Afficher un message d'erreur indiquant que l'utilisateur est bloqué
+        require './vue/connexion.html';
+        displayBlockedMessage();
+        exit(); // Arrêter l'exécution du script
+    }
+
+    $userData = $connexionModel->check_Password($pseudoCo);
     if ($userData && $connexionModel->checkCredentials($pseudoCo, $passwordCo)) {
         // Les identifiants sont corrects, connecter l'utilisateur
-        //require_once './vue/home.html';
-        // displaySuccessMessage();
         connectUser($userData);
     } else {
+        // Enregistrer une tentative de connexion infructueuse
+        $connexionModel->recordFailedLoginAttempt($pseudoCo);
         // Afficher un message d'erreur en cas de connexion échouée
         require './vue/connexion.html';
         displayErrorMessage();
-    }  
+    }
 }
 // Fonction pour connecter l'utilisateur
 function connectUser($userData) {
@@ -52,30 +60,26 @@ function displayErrorMessage() {
         });
     </script>';
 }
-// Fonction pour afficher un message de succès
-function displaySuccessMessage() {
+// Fonction pour afficher un message de bloquage
+function displayBlockedMessage() {
     echo '<script>
         document.addEventListener("DOMContentLoaded", function() {
             var messageDiv = document.getElementById("message");
-            var successMessage = `
-                <div class="alert alert-success">
+            var blockedMessage = `
+                <div class="alert alert-danger">
                     <section id="content" class="page-content">
                         <div class="card text-center">
                             <div class="card-header">
-                                <h3>Connexion réussie</h3>
+                                <h3>Connexion bloquée</h3>
                             </div>
                             <div class="card-body">
-                                <p>Bonjour ' . htmlspecialchars($_SESSION['pseudo_session'], ENT_QUOTES, 'UTF-8') . '.</p>
+                                <p>Votre compte a été temporairement bloqué en raison de trop de tentatives de connexion infructueuses. Veuillez réessayer plus tard.</p>
                             </div>
                         </div>
                     </section>
                 </div>
             `;
-            messageDiv.innerHTML = successMessage;
-            // Redirection après un délai
-            setTimeout(function() {
-                window.location.href = "index.php";
-            }, 3000); // 3 secondes
+            messageDiv.innerHTML = blockedMessage;
         });
     </script>';
 }

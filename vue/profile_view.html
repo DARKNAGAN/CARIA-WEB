@@ -11,49 +11,49 @@
 									<div class="mb-3 row">
 										<label for="pseudo" class="col-sm-2 col-form-label"><strong>Pseudo :</strong></label>
 										<div class="col-sm-10">
-											<span id="pseudo"><?php echo stripslashes(htmlspecialchars($data['pseudo'])); ?></span>
+											<span id="pseudo"><?php echo stripslashes(htmlspecialchars($userData['pseudo'])); ?></span>
 										</div>
 									</div><hr>
 									<div class="mb-3 row">
 										<label for="nom" class="col-sm-2 col-form-label"><strong>Nom :</strong></label>
 										<div class="col-sm-10">
-											<span id="nom"><?php echo stripslashes(htmlspecialchars($data['nom'])); ?></span>
+											<span id="nom"><?php echo stripslashes(htmlspecialchars($userData['nom'])); ?></span>
 										</div>
 									</div><hr>
 									<div class="mb-3 row">
 										<label for="prenom" class="col-sm-2 col-form-label"><strong>Prénom :</strong></label>
 										<div class="col-sm-10">
-											<span id="prenom"><?php echo stripslashes(htmlspecialchars($data['prenom'])); ?></span>
+											<span id="prenom"><?php echo stripslashes(htmlspecialchars($userData['prenom'])); ?></span>
 										</div>
 									</div><hr>
 									<div class="mb-3 row">
 										<label for="phone" class="col-sm-2 col-form-label"><strong>Téléphone :</strong></label>
 										<div class="col-sm-10">
-											<span id="phone"><?php echo stripslashes(htmlspecialchars($data['phone'])); ?></span>
+											<span id="phone"><?php echo stripslashes(htmlspecialchars($userData['phone'])); ?></span>
 										</div>
 									</div><hr>
 									<div class="mb-3 row">
 										<label for="adresse" class="col-sm-2 col-form-label"><strong>Adresse :</strong></label>
 										<div class="col-sm-10">
-											<span id="adresse"><?php echo stripslashes(htmlspecialchars($data['adresse'])); ?></span>
+											<span id="adresse"><?php echo stripslashes(htmlspecialchars($userData['adresse'])); ?></span>
 										</div>
 									</div><hr>
 									<div class="mb-3 row">
 										<label for="email" class="col-sm-2 col-form-label"><strong>Email :</strong></label>
 										<div class="col-sm-10">
-											<a class="link" href="mailto:<?php echo stripslashes($data['email']); ?>"><?php echo stripslashes(htmlspecialchars($data['email'])); ?></a>
+											<a class="link" href="mailto:<?php echo stripslashes($userData['email']); ?>"><?php echo stripslashes(htmlspecialchars($userData['email'])); ?></a>
 										</div>
 									</div><hr>
 									<div class="mb-3 row">
 										<label for="dateenregistre" class="col-sm-2 col-form-label"><strong>Inscrit depuis :</strong></label>
 										<div class="col-sm-10">
-											<span id="dateenregistre"><?php echo date('d F Y', strtotime(str_replace('/','-',$data['dateenregistre']))); ?></span>
+											<span id="dateenregistre"><?php echo strftime('%d %B %Y', strtotime(str_replace('/','-',$userData['dateenregistre']))); ?></span>
 										</div>
 									</div><hr>
 									<div class="mb-3 row">
 										<label for="avatar" class="col-sm-2 col-form-label"><strong>Avatar :</strong></label>
 										<div class="col-sm-10">
-											<img src="<?php echo $data['avatar']; ?>" width="150px" alt="Aucun avatar" />
+											<img src="<?php echo $userData['avatar']; ?>" width="150px" alt="Aucun avatar" />
 										</div>
 									</div>
 								</div>
