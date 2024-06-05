@@ -32,6 +32,14 @@ if ($stmtVehicule->fetchColumn() == 0) {
     die(json_encode(['status' => 'error', 'message' => 'Le véhicule spécifié n\'existe pas.']));
 }
 
+// Vérification que l'ID du véhicule existe dans la base de données
+$stmtUser = $bdd->prepare("SELECT COUNT(*) FROM Clients WHERE id = :id_user");
+$stmtUser->bindParam(':id_user', $id_user, PDO::PARAM_INT);
+$stmtUser->execute();
+if ($stmtUser->fetchColumn() == 0) {
+    die(json_encode(['status' => 'error', 'message' => 'L\'utilisateur spécifié n\'existe pas.']));
+}
+
 // Validation des formats de date
 if (!validateDateTime($start) || !validateDateTime($end)) {
     die(json_encode(['status' => 'error', 'message' => 'Les dates doivent être dans un format valide (YYYY-MM-DD HH:MM:SS).']));

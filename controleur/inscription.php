@@ -103,12 +103,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = "Le numéro de téléphone ne doit contenir que des chiffres.";
     }
     
-    if (empty($localisation) || strlen($localisation) < 6 || strlen($localisation) > 50) {
-        $errors[] = "L'adresse postale est requise et doit contenir entre 6 et 50 caractères.";
+    if (empty($localisation) || strlen($localisation) < 6 || strlen($localisation) > 70) {
+        $errors[] = "L'adresse postale est requise et doit contenir entre 6 et 70 caractères.";
     }
 
-    if (!preg_match('/^[A-Za-zÀ-ÖØ-öø-ÿ0-9 ]+$/', $localisation)) {
-        $errors[] = "L'adresse postale peut contenir uniquement des lettres, des chiffres et des espaces.";
+    if (!preg_match('/^[A-Za-zÀ-ÖØ-öø-ÿ0-9 -]+$/', $localisation)) {
+    $errors[] = "L'adresse postale peut contenir uniquement des lettres, des chiffres, des tirets et des espaces.";
     }
 
     if (preg_match('/^\s+$/', $localisation)) {

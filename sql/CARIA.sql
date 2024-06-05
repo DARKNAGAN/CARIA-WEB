@@ -16,7 +16,7 @@ CREATE TABLE Clients (
   pseudo varchar(25),
   prenom varchar(25) DEFAULT NULL,
   nom varchar(25) DEFAULT NULL,
-  adresse varchar(50) DEFAULT NULL,
+  adresse varchar(70) DEFAULT NULL,
   phone varchar(15) DEFAULT NULL,
   email varchar(30) DEFAULT NULL,
   mdp varchar(60) NOT NULL,
