@@ -55,18 +55,14 @@ $(document).ready(function () {
   function eventClickFunction(event) {
     // Afficher une pop-up avec les détails de l'événement
     alert(
-      event.title +
-        " : \n" +
-        event.vehicule +
-        " pour le client " +
-        event.utilisateur +
-        "\n" +
-        "\n" +
-        "Période de réservation : " +
-        "\n" +
-        event.start.format("dddd DD MMMM YYYY HH:mm") +
-        " --> " +
-        event.end.format("dddd DD MMMM YYYY HH:mm")
+      event.title + " - " + event.vehicule + " pour le client " + event.utilisateur + "\n" + 
+        "\n" + "Date et lieu de début : " + 
+        "\n" + event.start.format("dddd DD MMMM YYYY HH:mm") + 
+        "\n" + event.adresse +"\n" + 
+        "\n" + "Date et lieu de fin : " + 
+        "\n" + event.end.format("dddd DD MMMM YYYY HH:mm") + 
+        "\n" + event.adresse
+
     );
   }
 

@@ -30,7 +30,7 @@ class Connexion {
 	$id=(isset($_SESSION['id_session']))?(int) $_SESSION['id_session']:0;
 
 	//On prend les infos du membre
-	$req = $bdd->prepare('SELECT pseudo, mdp, email, avatar, adresse, prenom, nom, phone, dateenregistre FROM Clients WHERE id=:id');
+	$req = $bdd->prepare('SELECT pseudo, mdp, email, avatar, adresse, prenom, nom, phone, dateenregistre, privilege FROM Clients WHERE id=:id');
 	$req->bindValue(':id',$id,PDO::PARAM_INT);
 	$req->execute();
 	$userData = $req->fetch();
@@ -67,7 +67,7 @@ function get_MemberInfoId(){
 	$id=(isset($_SESSION['id_session']))?(int) $_SESSION['id_session']:0;
 
 	//On prend les infos du membre
-	$req = $bdd->prepare('SELECT pseudo, mdp, email, avatar, adresse, prenom, nom, phone, dateenregistre FROM Clients WHERE id=:id');
+	$req = $bdd->prepare('SELECT pseudo, mdp, email, avatar, adresse, prenom, nom, phone, dateenregistre, privilege FROM Clients WHERE id=:id');
 	$req->bindValue(':id',$id,PDO::PARAM_INT);
 	$req->execute();
 	$userData = $req->fetch();
@@ -198,8 +198,8 @@ function edit_avatar($image, $pseudo) {
 	$defaultDirImagePath = "./images/avatars/img_user.jpg";
     $dirImagePath = "./images/avatars/" . $pseudo . "/img_user.jpg";
     $imagePath = "/images/avatars/" . $pseudo . "/img_user.jpg";
-    $newWidth = 300;
-    $newHeight = 300;
+    $newWidth = 100;
+    $newHeight = 100;
     list($width, $height) = getimagesize($image['tmp_name']);
     $imageResized = imagecreatetruecolor($newWidth, $newHeight);
     

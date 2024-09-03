@@ -28,9 +28,11 @@
 						<li class="nav-item px-5">
 							<a class="nav-link" href="./index.php">Accueil</a>
 						</li>
-						<li class="nav-item px-5">
-							<a class="nav-link" href="gestion.php">Gestion</a>
-						</li>
+						<?php if($_SESSION['privilege_session'] == 4) { ?>
+							<li class="nav-item px-5">
+								<a class="nav-link" href="gestion.php">Gestion</a>
+							</li>
+						<?php } ?>
 						<li class="nav-item px-5">
 							<a class="nav-link" href="./profil.php?action=modifier">Modifier mes informations</a>
 						</li>

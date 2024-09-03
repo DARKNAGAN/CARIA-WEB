@@ -18,6 +18,7 @@ switch($action){
     case "consulter":
         // Afficher les informations du membre
         $userData = get_MemberInfo($membreId);
+        setlocale(LC_TIME, 'fr_FR.UTF-8', 'fra'); // Ajustez selon votre système
         if ($userData === false) {
             $message = "Impossible de récupérer les informations de l'utilisateur où il n'existe pas.";
            require_once './vue/erreur.html';
@@ -30,6 +31,18 @@ switch($action){
         break;
     default:
         echo '<p>Cette action est impossible</p>';
+}
+
+// Fonction pour obtenir le texte correspondant au privilège
+function getPrivilegeText($privilege) {
+    $privilegeMap = [
+    	1 => 'Visiteur',
+        2 => 'Utilisateur',
+        3 => 'Modérateur',
+        4 => 'Administrateur',
+    ];
+
+    return isset($privilegeMap[$privilege]) ? $privilegeMap[$privilege] : 'Privilège inconnu';
 }
 
 function handleProfileModification() {

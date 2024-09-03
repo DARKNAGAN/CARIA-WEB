@@ -1,5 +1,5 @@
 <?php
 	require_once 'config/connexion_sql.php';
-    verifierAcces(VISITEUR);
+    verifierAcces(ADMIN);
     require_once 'controleur/gestion.php';
 ?>

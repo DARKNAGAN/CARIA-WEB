@@ -45,7 +45,7 @@
                                             </div>
                                         </fieldset>
                                         <fieldset>
-                                            <legend>Informations personnelles</legend>
+                                            <legend>Informations personnelles <?php echo stripslashes(getPrivilegeText($userData['privilege'])); ?></legend>
                                             <div class="mb-3 row">
                                                 <label for="pseudo" class="col-sm-4 col-form-label">Pseudo</label>
                                                 <div class="col-sm-8">
