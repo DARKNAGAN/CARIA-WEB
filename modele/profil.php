@@ -226,15 +226,19 @@ function edit_avatar($image, $pseudo) {
 function post_RemoveAvatar($pseudo){
 	global $bdd;
 	$id=(isset($_SESSION['id_session']))?(int) $_SESSION['id_session']:0;
-	$defaultDirImagePath = "./images/avatars/img_user.jpg";
-    $dirImagePath = "./images/avatars/" . $pseudo . "/img_user.jpg";
+	$defaultDirImagePath = "images/avatars/img_user.jpg";
+    $dirImagePath = "images/avatars/" . $pseudo . "/img_user.jpg";
     $imagePath = "/images/avatars/" . $pseudo . "/img_user.jpg";
 	// Utiliser une image par défaut si aucune image n'est fournie
-    copy($defaultDirImagePath, $imagePath);
+    copy($defaultDirImagePath, $dirImagePath);
 }
 
 function post_RemoveClient($id) {
     global $bdd;
+     // Suppression des réservations lié à l'utilisateurs de la base de données
+    $req = $bdd->prepare('DELETE FROM Reservations WHERE id_user=:id');
+    $req->bindValue(':id', $id, PDO::PARAM_INT);
+    $req->execute();
     // Suppression de l'image
     $req = $bdd->prepare('SELECT avatar FROM Clients WHERE id= :id');
     $req->bindValue(':id', $id, PDO::PARAM_INT);
